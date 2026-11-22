@@ -4,16 +4,17 @@ import { useFrame } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import {
   MOUNTAIN_CONFIG,
-  mountainRadiusAt,
   STATION_PLACEMENTS,
   getStationPosition,
 } from "../../scene/scene-config";
 import { PALETTE } from "../../lib/theme";
+import Mountain from "./Mountain";
 import Railway from "./Railway";
 import Train from "./Train";
 import Stations from "./Stations";
 import Environment from "./Environment";
 import Details from "./Details";
+import SkyDome from "./SkyDome";
 import CameraRig from "./CameraRig";
 
 export type SceneRefs = {
@@ -23,54 +24,9 @@ export type SceneRefs = {
   reducedMotion: boolean;
 };
 
-const { height, trackSurfaceOffset, plinthRadius, plinthHeight } = MOUNTAIN_CONFIG;
-
-/** Snow-capped mountain body as a lathe revolve, with height-based vertex colors. */
-function useMountainGeometry() {
-  return useMemo(() => {
-    const profile: THREE.Vector2[] = [];
-    const segments = 52;
-    profile.push(new THREE.Vector2(0.001, -0.8));
-    profile.push(new THREE.Vector2(mountainRadiusAt(0), -0.8));
-    for (let i = 0; i <= segments; i += 1) {
-      const t = i / segments;
-      const r = Math.max(mountainRadiusAt(t) - trackSurfaceOffset, 0.06);
-      profile.push(new THREE.Vector2(r, t * height));
-    }
-    profile.push(new THREE.Vector2(0.001, height));
-
-    const geo = new THREE.LatheGeometry(profile, 120);
-    geo.computeVertexNormals();
-
-    // Vertex colors: slate rock low, snow high, with a soft snowline and noise.
-    const rock = new THREE.Color(PALETTE.slate).multiplyScalar(0.95);
-    const rockWarm = new THREE.Color(PALETTE.mountainShadow).multiplyScalar(1.15);
-    const snow = new THREE.Color(PALETTE.snow);
-    const pos = geo.attributes.position;
-    const colors = new Float32Array(pos.count * 3);
-    const c = new THREE.Color();
-    for (let i = 0; i < pos.count; i += 1) {
-      const x = pos.getX(i);
-      const y = pos.getY(i);
-      const z = pos.getZ(i);
-      const tn = THREE.MathUtils.clamp(y / height, 0, 1);
-      const noise = Math.sin(x * 2.3) * Math.cos(z * 2.1) * 0.08;
-      const snowline = 0.42 + noise;
-      const snowAmt = THREE.MathUtils.smoothstep(tn, snowline, snowline + 0.14);
-      c.copy(rock).lerp(rockWarm, 0.3 + noise).lerp(snow, snowAmt);
-      // Gentle strata: slightly darker in the low rock, bright on the caps.
-      c.multiplyScalar(0.92 + tn * 0.22);
-      colors[i * 3] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-    }
-    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    return geo;
-  }, []);
-}
+const { plinthRadius, plinthHeight } = MOUNTAIN_CONFIG;
 
 export default function MountainScene(refs: SceneRefs) {
-  const mountainGeo = useMountainGeometry();
   const worldRef = useRef<THREE.Group>(null);
 
   // Scroll-driven presentation rotation of the WHOLE world (mountain, track,
@@ -95,6 +51,8 @@ export default function MountainScene(refs: SceneRefs) {
     <>
       <color attach="background" args={[PALETTE.sky]} />
       <fogExp2 attach="fog" args={[PALETTE.sky, 0.011]} />
+
+      <SkyDome />
 
       {/* Brighter cool ambient + hemisphere so the midnight scene still reads. */}
       <ambientLight intensity={0.55} color={PALETTE.ice} />
@@ -147,10 +105,7 @@ export default function MountainScene(refs: SceneRefs) {
       />
 
       <group ref={worldRef}>
-        {/* Mountain */}
-        <mesh geometry={mountainGeo} castShadow receiveShadow>
-          <meshStandardMaterial vertexColors roughness={0.92} metalness={0.02} />
-        </mesh>
+        <Mountain />
 
         {/* Tabletop plinth */}
         <mesh position={[0, -0.8 - plinthHeight / 2, 0]} receiveShadow>

@@ -239,11 +239,56 @@ export function distanceToProgressDelta(distance: number): number {
   return distance / TRACK_LENGTH;
 }
 
+// ---------------------------------------------------------------------------
+// Canyons: gullies carved into the mountain that the railway bridges across.
+// Each is specified by the PROGRESS at which the track spans it; the gully is
+// carved at that crossing's angle/height, so the track (unchanged) floats over
+// the receded surface and a trestle bridge fills the gap.
+// ---------------------------------------------------------------------------
+
+export type Canyon = {
+  progress: number;
+  angularHalfWidth: number; // radians — how wide the gully is around the track
+  heightHalfWidth: number; // normalized height — how far it runs up/down slope
+  depth: number; // radial inward dip of the surface, world units
+};
+
+export const CANYONS: readonly Canyon[] = [
+  { progress: 0.145, angularHalfWidth: 0.17, heightHalfWidth: 0.12, depth: 1.6 },
+  { progress: 0.52, angularHalfWidth: 0.15, heightHalfWidth: 0.1, depth: 1.35 },
+];
+
+/** Each canyon's carved centre (angle + normalized height) from the track. */
+export const canyonCenters = CANYONS.map((c) => {
+  const pt = getTrackPoint(c.progress);
+  return {
+    ...c,
+    angle: Math.atan2(pt.z, pt.x),
+    yNorm: THREE.MathUtils.clamp(pt.y / MOUNTAIN_CONFIG.height, 0, 1),
+    point: pt.clone(),
+  };
+});
+
+/** Radial inward dip of the mountain surface at a world angle + normalized height. */
+export function canyonDip(worldAngle: number, yNorm: number): number {
+  let dip = 0;
+  for (const c of canyonCenters) {
+    let dA = worldAngle - c.angle;
+    dA = Math.atan2(Math.sin(dA), Math.cos(dA)); // wrap to −π..π
+    const dY = yNorm - c.yNorm;
+    dip +=
+      c.depth *
+      Math.exp(-((dA / c.angularHalfWidth) ** 2) - (dY / c.heightHalfWidth) ** 2);
+  }
+  return dip;
+}
+
 /**
  * Validate that the track stays clear of the mountain skin along the whole
  * spline. The track is generated on the surface radius; this confirms the
  * sampled points never fall *inside* the (inset) mountain body. Returns the
  * minimum clearance found so a test can assert it is non-negative.
+ * (Canyons only recede the surface further, so they only increase clearance.)
  */
 export function validateTrackClearance(samples = 200) {
   let minClearance = Number.POSITIVE_INFINITY;

@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import {
   sampleFrame,
-  getTrackPoint,
+  canyonCenters,
   STATION_PLACEMENTS,
   getStationPosition,
 } from "../../scene/scene-config";
@@ -31,6 +31,7 @@ function useDetailMaterials() {
   return useMemo(() => {
     const stone = new THREE.MeshStandardMaterial({ color: "#5c626b", roughness: 0.92 });
     const timber = new THREE.MeshStandardMaterial({ color: PALETTE.timber, roughness: 0.85 });
+    const timberDark = new THREE.MeshStandardMaterial({ color: "#4a3422", roughness: 0.9 });
     const dark = new THREE.MeshStandardMaterial({ color: "#0a0f1a", roughness: 1 });
     const glow = new THREE.MeshStandardMaterial({
       color: PALETTE.amber,
@@ -38,40 +39,30 @@ function useDetailMaterials() {
       emissiveIntensity: 2.2,
       roughness: 0.5,
     });
-    return { stone, timber, dark, glow };
+    return { stone, timber, timberDark, dark, glow };
   }, []);
 }
+type Mats = ReturnType<typeof useDetailMaterials>;
 
 /** A stone tunnel portal straddling the track, with a warm glow inside. */
-function TunnelPortal({
-  progress,
-  mats,
-}: {
-  progress: number;
-  mats: ReturnType<typeof useDetailMaterials>;
-}) {
+function TunnelPortal({ progress, mats }: { progress: number; mats: Mats }) {
   return (
     <OnTrack progress={progress}>
-      {/* Pillars */}
       <mesh position={[-0.52, 0.5, 0]} material={mats.stone} castShadow>
         <boxGeometry args={[0.2, 1.0, 0.36]} />
       </mesh>
       <mesh position={[0.52, 0.5, 0]} material={mats.stone} castShadow>
         <boxGeometry args={[0.2, 1.0, 0.36]} />
       </mesh>
-      {/* Lintel */}
       <mesh position={[0, 1.02, 0]} material={mats.stone} castShadow>
         <boxGeometry args={[1.34, 0.22, 0.4]} />
       </mesh>
-      {/* Keystone */}
       <mesh position={[0, 1.16, 0]} material={mats.stone}>
         <boxGeometry args={[0.2, 0.16, 0.42]} />
       </mesh>
-      {/* Dark interior depth */}
       <mesh position={[0, 0.5, -0.25]} material={mats.dark}>
         <boxGeometry args={[0.86, 0.96, 0.1]} />
       </mesh>
-      {/* Warm glow inside the mouth */}
       <mesh position={[0, 0.42, -0.12]} material={mats.glow}>
         <boxGeometry args={[0.7, 0.7, 0.04]} />
       </mesh>
@@ -79,39 +70,96 @@ function TunnelPortal({
   );
 }
 
-/** A timber trestle: vertical posts from a low track section down to the plinth. */
-function Trestle({ mats }: { mats: ReturnType<typeof useDetailMaterials> }) {
-  const plinthTopY = -0.76;
-  const posts = useMemo(() => {
-    const out: { pos: [number, number, number]; h: number }[] = [];
-    for (let i = 0; i <= 6; i += 1) {
-      const p = 0.085 + (i / 6) * 0.07; // low valley section
-      const pt = getTrackPoint(p);
-      const h = Math.max(pt.y - plinthTopY, 0.1);
-      out.push({ pos: [pt.x, plinthTopY + h / 2, pt.z], h });
-    }
+/**
+ * A timber trestle bridge spanning a canyon. Built in the track's local frame
+ * (X across, Y up/normal, Z along): deck planks + stringers, side guard rails,
+ * and bents of legs with X cross-bracing descending into the gully.
+ */
+function Bridge({
+  progress,
+  depth,
+  mats,
+}: {
+  progress: number;
+  depth: number;
+  mats: Mats;
+}) {
+  const half = 1.25; // half span in world units along the track
+  const legLen = Math.max(depth, 0.7);
+  const planks = useMemo(() => {
+    const out: number[] = [];
+    for (let z = -half; z <= half; z += 0.16) out.push(z);
     return out;
   }, []);
+  const railPosts = useMemo(() => {
+    const out: number[] = [];
+    for (let z = -half; z <= half; z += 0.42) out.push(z);
+    return out;
+  }, []);
+  const bents = [-1.05, -0.35, 0.35, 1.05];
+  const braceLen = Math.hypot(0.66, legLen);
+  const braceAng = Math.atan2(0.66, legLen);
+
   return (
-    <group>
-      {posts.map((post, i) => (
-        <mesh key={i} position={post.pos} material={mats.timber} castShadow>
-          <boxGeometry args={[0.09, post.h, 0.09]} />
+    <OnTrack progress={progress}>
+      {/* Stringers (main beams under the deck) */}
+      {[-0.3, 0.3].map((x) => (
+        <mesh key={x} position={[x, 0.03, 0]} material={mats.timber} castShadow>
+          <boxGeometry args={[0.08, 0.08, half * 2 + 0.1]} />
         </mesh>
       ))}
-    </group>
+      {/* Deck planks */}
+      {planks.map((z, i) => (
+        <mesh key={`pl${i}`} position={[0, 0.08, z]} material={mats.timberDark}>
+          <boxGeometry args={[0.82, 0.05, 0.1]} />
+        </mesh>
+      ))}
+      {/* Side guard rails */}
+      {[-0.44, 0.44].map((x) => (
+        <group key={`rl${x}`}>
+          <mesh position={[x, 0.32, 0]} material={mats.timber}>
+            <boxGeometry args={[0.05, 0.05, half * 2]} />
+          </mesh>
+          {railPosts.map((z, i) => (
+            <mesh key={i} position={[x, 0.2, z]} material={mats.timber}>
+              <boxGeometry args={[0.05, 0.3, 0.05]} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {/* Bents: legs + cross-bracing descending into the canyon */}
+      {bents.map((z, i) => (
+        <group key={`bt${i}`} position={[0, 0, z]}>
+          {[-0.33, 0.33].map((x) => (
+            <mesh key={x} position={[x, 0.03 - legLen / 2, 0]} material={mats.timber} castShadow>
+              <boxGeometry args={[0.07, legLen, 0.07]} />
+            </mesh>
+          ))}
+          {/* horizontal tie near the bottom */}
+          <mesh position={[0, 0.03 - legLen * 0.8, 0]} material={mats.timber}>
+            <boxGeometry args={[0.72, 0.05, 0.05]} />
+          </mesh>
+          {/* X cross-braces */}
+          <mesh position={[0, 0.03 - legLen / 2, 0]} rotation={[0, 0, braceAng]} material={mats.timberDark}>
+            <boxGeometry args={[0.04, braceLen, 0.04]} />
+          </mesh>
+          <mesh position={[0, 0.03 - legLen / 2, 0]} rotation={[0, 0, -braceAng]} material={mats.timberDark}>
+            <boxGeometry args={[0.04, braceLen, 0.04]} />
+          </mesh>
+        </group>
+      ))}
+    </OnTrack>
   );
 }
 
-/** A small campfire near the valley station. */
-function Campfire({ mats }: { mats: ReturnType<typeof useDetailMaterials> }) {
+/** A small flickering campfire near the valley station. */
+function Campfire({ mats }: { mats: Mats }) {
   const flameRef = useRef<THREE.Mesh>(null);
   const lightRef = useRef<THREE.PointLight>(null);
   const t = useRef(0);
 
   const base = useMemo(() => {
     const v = getStationPosition(STATION_PLACEMENTS[0]);
-    // Offset to the side of the depot, sitting on the surface.
     return new THREE.Vector3(v.x * 0.86, v.y + 0.05, v.z * 0.86);
   }, []);
 
@@ -120,15 +168,13 @@ function Campfire({ mats }: { mats: ReturnType<typeof useDetailMaterials> }) {
     const flick = 0.75 + Math.sin(t.current * 9) * 0.15 + Math.sin(t.current * 23) * 0.08;
     if (flameRef.current) {
       flameRef.current.scale.y = flick;
-      (flameRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
-        2.2 * flick;
+      (flameRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 2.2 * flick;
     }
     if (lightRef.current) lightRef.current.intensity = 2.6 * flick;
   });
 
   return (
     <group position={[base.x, base.y, base.z]}>
-      {/* Logs */}
       {[0, 1, 2].map((i) => (
         <mesh
           key={i}
@@ -139,7 +185,6 @@ function Campfire({ mats }: { mats: ReturnType<typeof useDetailMaterials> }) {
           <cylinderGeometry args={[0.03, 0.03, 0.34, 6]} />
         </mesh>
       ))}
-      {/* Flame */}
       <mesh ref={flameRef} position={[0, 0.16, 0]}>
         <coneGeometry args={[0.1, 0.34, 8]} />
         <meshStandardMaterial
@@ -158,9 +203,11 @@ export default function Details() {
   const mats = useDetailMaterials();
   return (
     <group>
+      {canyonCenters.map((c, i) => (
+        <Bridge key={`bridge${i}`} progress={c.progress} depth={c.depth} mats={mats} />
+      ))}
       <TunnelPortal progress={0.34} mats={mats} />
-      <TunnelPortal progress={0.7} mats={mats} />
-      <Trestle mats={mats} />
+      <TunnelPortal progress={0.72} mats={mats} />
       <Campfire mats={mats} />
     </group>
   );
