@@ -39,33 +39,58 @@ function useDetailMaterials() {
       emissiveIntensity: 2.2,
       roughness: 0.5,
     });
-    return { stone, timber, timberDark, dark, glow };
+    const rock = new THREE.MeshStandardMaterial({
+      color: "#4e545d",
+      roughness: 0.96,
+      flatShading: true,
+    });
+    return { stone, timber, timberDark, dark, glow, rock };
   }, []);
 }
 type Mats = ReturnType<typeof useDetailMaterials>;
 
-/** A stone tunnel portal straddling the track, with a warm glow inside. */
-function TunnelPortal({ progress, mats }: { progress: number; mats: Mats }) {
+/** A stone portal frame at a tunnel mouth (X across, Y up, Z along track). */
+function PortalFrame({ z, mats }: { z: number; mats: Mats }) {
+  return (
+    <group position={[0, 0, z]}>
+      <mesh position={[-0.5, 0.42, 0]} material={mats.stone} castShadow>
+        <boxGeometry args={[0.16, 0.84, 0.16]} />
+      </mesh>
+      <mesh position={[0.5, 0.42, 0]} material={mats.stone} castShadow>
+        <boxGeometry args={[0.16, 0.84, 0.16]} />
+      </mesh>
+      <mesh position={[0, 0.84, 0]} material={mats.stone} castShadow>
+        <boxGeometry args={[1.18, 0.2, 0.18]} />
+      </mesh>
+      <mesh position={[0, 0.96, 0]} material={mats.stone}>
+        <boxGeometry args={[0.2, 0.16, 0.2]} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * A real rock tunnel the track passes THROUGH: a faceted rock mound over the
+ * track with a dark bore and a framed portal at each mouth, so the rails
+ * visibly enter one side and emerge from the other.
+ */
+function Tunnel({ progress, mats }: { progress: number; mats: Mats }) {
   return (
     <OnTrack progress={progress}>
-      <mesh position={[-0.52, 0.5, 0]} material={mats.stone} castShadow>
-        <boxGeometry args={[0.2, 1.0, 0.36]} />
+      {/* Rock mound the bore passes through */}
+      <mesh position={[0, 0.34, 0]} scale={[1.05, 0.82, 1.2]} material={mats.rock} castShadow receiveShadow>
+        <icosahedronGeometry args={[0.72, 1]} />
       </mesh>
-      <mesh position={[0.52, 0.5, 0]} material={mats.stone} castShadow>
-        <boxGeometry args={[0.2, 1.0, 0.36]} />
+      <mesh position={[0.25, 0.5, 0.2]} scale={[0.7, 0.6, 0.7]} material={mats.rock} castShadow>
+        <icosahedronGeometry args={[0.5, 1]} />
       </mesh>
-      <mesh position={[0, 1.02, 0]} material={mats.stone} castShadow>
-        <boxGeometry args={[1.34, 0.22, 0.4]} />
+      {/* Dark bore (axis along the track) */}
+      <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]} material={mats.dark}>
+        <cylinderGeometry args={[0.4, 0.4, 1.8, 16, 1, true]} />
       </mesh>
-      <mesh position={[0, 1.16, 0]} material={mats.stone}>
-        <boxGeometry args={[0.2, 0.16, 0.42]} />
-      </mesh>
-      <mesh position={[0, 0.5, -0.25]} material={mats.dark}>
-        <boxGeometry args={[0.86, 0.96, 0.1]} />
-      </mesh>
-      <mesh position={[0, 0.42, -0.12]} material={mats.glow}>
-        <boxGeometry args={[0.7, 0.7, 0.04]} />
-      </mesh>
+      {/* Portal mouths */}
+      <PortalFrame z={0.86} mats={mats} />
+      <PortalFrame z={-0.86} mats={mats} />
     </OnTrack>
   );
 }
@@ -206,8 +231,8 @@ export default function Details() {
       {canyonCenters.map((c, i) => (
         <Bridge key={`bridge${i}`} progress={c.progress} depth={c.depth} mats={mats} />
       ))}
-      <TunnelPortal progress={0.34} mats={mats} />
-      <TunnelPortal progress={0.72} mats={mats} />
+      <Tunnel progress={0.34} mats={mats} />
+      <Tunnel progress={0.72} mats={mats} />
       <Campfire mats={mats} />
     </group>
   );

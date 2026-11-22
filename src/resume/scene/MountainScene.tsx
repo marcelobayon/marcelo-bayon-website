@@ -14,7 +14,9 @@ import Train from "./Train";
 import Stations from "./Stations";
 import Environment from "./Environment";
 import Details from "./Details";
+import FrozenLake from "./FrozenLake";
 import SkyDome from "./SkyDome";
+import Aurora from "./Aurora";
 import CameraRig from "./CameraRig";
 
 export type SceneRefs = {
@@ -53,6 +55,7 @@ export default function MountainScene(refs: SceneRefs) {
       <fogExp2 attach="fog" args={[PALETTE.sky, 0.011]} />
 
       <SkyDome />
+      <Aurora reducedMotion={refs.reducedMotion} />
 
       {/* Brighter cool ambient + hemisphere so the midnight scene still reads. */}
       <ambientLight intensity={0.55} color={PALETTE.ice} />
@@ -127,6 +130,7 @@ export default function MountainScene(refs: SceneRefs) {
         <Stations activeIndexRef={refs.activeIndexRef} />
         <Environment />
         <Details />
+        <FrozenLake />
       </group>
 
       <CameraRig

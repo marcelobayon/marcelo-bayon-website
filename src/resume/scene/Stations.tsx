@@ -1,7 +1,11 @@
 import { type MutableRefObject, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { STATION_PLACEMENTS, getStationPosition } from "../../scene/scene-config";
+import {
+  MOUNTAIN_CONFIG,
+  STATION_PLACEMENTS,
+  getStationPosition,
+} from "../../scene/scene-config";
 import { PALETTE } from "../../lib/theme";
 
 function useStationMaterials() {
@@ -290,6 +294,11 @@ export default function Stations({
   const placements = useMemo(
     () =>
       STATION_PLACEMENTS.map((p) => {
+        // The observatory is the capstone: sit it dead-centre on the flat
+        // summit rather than on the upper slope where it reads as missing.
+        if (p.id === "summit-observatory") {
+          return { pos: new THREE.Vector3(0, MOUNTAIN_CONFIG.height, 0), yaw: 0 };
+        }
         const pos = getStationPosition(p);
         const yaw = Math.atan2(pos.x, pos.z);
         return { pos, yaw };
@@ -319,11 +328,13 @@ export default function Stations({
     <>
       {placements.map(({ pos, yaw }, i) => {
         const Building = BUILDINGS[i];
+        const isSummit = STATION_PLACEMENTS[i].id === "summit-observatory";
         return (
           <group
             key={STATION_PLACEMENTS[i].id}
             position={[pos.x, pos.y - 0.04, pos.z]}
             rotation={[0, yaw, 0]}
+            scale={isSummit ? 1.3 : 1}
           >
             <mesh position={[0, 0, 0]} receiveShadow>
               <cylinderGeometry args={[1.0, 1.1, 0.12, 20]} />
