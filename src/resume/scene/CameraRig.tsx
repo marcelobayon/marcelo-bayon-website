@@ -8,14 +8,11 @@ import { CAMERA_CONFIG, getTrackPoint } from "../../scene/scene-config";
 export default function CameraRig({
   progressRef,
   userInteractingRef,
-  reducedMotion,
 }: {
   progressRef: MutableRefObject<number>;
   userInteractingRef: MutableRefObject<boolean>;
-  reducedMotion: boolean;
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
-  const hasInteracted = useRef(false);
   const tmp = useMemo(() => new THREE.Vector3(), []);
   const desired = useMemo(() => new THREE.Vector3(0, CAMERA_CONFIG.initialTarget[1], 0), []);
 
@@ -45,13 +42,9 @@ export default function CameraRig({
       // Keep the camera above the tabletop and out of the mountain.
       minPolarAngle={0.15}
       maxPolarAngle={Math.PI / 2 - 0.04}
-      autoRotate={!reducedMotion && !hasInteracted.current}
-      autoRotateSpeed={0.35}
       target={[...CAMERA_CONFIG.initialTarget]}
       onStart={() => {
-        hasInteracted.current = true;
         userInteractingRef.current = true;
-        if (controlsRef.current) controlsRef.current.autoRotate = false;
       }}
       onEnd={() => {
         userInteractingRef.current = false;

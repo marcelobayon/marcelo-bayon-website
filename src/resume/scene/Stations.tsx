@@ -15,7 +15,7 @@ function useStationMaterials() {
     const warm = new THREE.MeshStandardMaterial({
       color: PALETTE.amber,
       emissive: new THREE.Color(PALETTE.amber),
-      emissiveIntensity: 1.5,
+      emissiveIntensity: 2.1,
       roughness: 0.5,
     });
     const forge = new THREE.MeshStandardMaterial({

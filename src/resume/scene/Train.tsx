@@ -38,7 +38,7 @@ function useTrainMaterials() {
     const window = new THREE.MeshStandardMaterial({
       color: PALETTE.amber,
       emissive: new THREE.Color(PALETTE.amber),
-      emissiveIntensity: 1.6,
+      emissiveIntensity: 2.1,
       roughness: 0.4,
     });
     return { iron, body, car, brass, window };

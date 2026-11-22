@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import MountainScene from "./scene/MountainScene";
 import ResumeOverlay from "./overlay/ResumeOverlay";
@@ -73,7 +74,12 @@ export default function RailwayExperience({ onExitToText }: Props) {
           className="railway__canvas"
           shadows
           dpr={[1, 2]}
-          gl={{ antialias: true, powerPreference: "high-performance" }}
+          gl={{
+            antialias: true,
+            powerPreference: "high-performance",
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.3,
+          }}
           camera={{
             position: [...CAMERA_CONFIG.initialPosition],
             fov: 42,

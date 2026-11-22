@@ -1,5 +1,6 @@
-import { type MutableRefObject, useMemo } from "react";
+import { type MutableRefObject, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useFrame } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import {
   MOUNTAIN_CONFIG,
@@ -12,6 +13,7 @@ import Railway from "./Railway";
 import Train from "./Train";
 import Stations from "./Stations";
 import Environment from "./Environment";
+import Details from "./Details";
 import CameraRig from "./CameraRig";
 
 export type SceneRefs = {
@@ -41,8 +43,8 @@ function useMountainGeometry() {
     geo.computeVertexNormals();
 
     // Vertex colors: slate rock low, snow high, with a soft snowline and noise.
-    const rock = new THREE.Color(PALETTE.slate).multiplyScalar(0.72);
-    const rockWarm = new THREE.Color(PALETTE.mountainShadow);
+    const rock = new THREE.Color(PALETTE.slate).multiplyScalar(0.95);
+    const rockWarm = new THREE.Color(PALETTE.mountainShadow).multiplyScalar(1.15);
     const snow = new THREE.Color(PALETTE.snow);
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
@@ -52,12 +54,12 @@ function useMountainGeometry() {
       const y = pos.getY(i);
       const z = pos.getZ(i);
       const tn = THREE.MathUtils.clamp(y / height, 0, 1);
-      const noise = (Math.sin(x * 2.3) * Math.cos(z * 2.1)) * 0.08;
-      const snowline = 0.46 + noise;
+      const noise = Math.sin(x * 2.3) * Math.cos(z * 2.1) * 0.08;
+      const snowline = 0.42 + noise;
       const snowAmt = THREE.MathUtils.smoothstep(tn, snowline, snowline + 0.14);
       c.copy(rock).lerp(rockWarm, 0.3 + noise).lerp(snow, snowAmt);
-      // Slight darkening in crevices (lower = darker) for strata feel.
-      c.multiplyScalar(0.82 + tn * 0.28);
+      // Gentle strata: slightly darker in the low rock, bright on the caps.
+      c.multiplyScalar(0.92 + tn * 0.22);
       colors[i * 3] = c.r;
       colors[i * 3 + 1] = c.g;
       colors[i * 3 + 2] = c.b;
@@ -69,8 +71,17 @@ function useMountainGeometry() {
 
 export default function MountainScene(refs: SceneRefs) {
   const mountainGeo = useMountainGeometry();
+  const worldRef = useRef<THREE.Group>(null);
 
-  // Warm practical lights near a few stations (points, no shadows for perf).
+  // Scroll-driven presentation rotation of the WHOLE world (mountain, track,
+  // train, stations, props) — they rotate together, so nothing desyncs. Damped.
+  useFrame(() => {
+    const g = worldRef.current;
+    if (!g) return;
+    const target = -refs.progressRef.current * Math.PI * 1.15;
+    g.rotation.y += (target - g.rotation.y) * 0.08;
+  });
+
   const warmLights = useMemo(
     () =>
       STATION_PLACEMENTS.map((p) => {
@@ -83,39 +94,42 @@ export default function MountainScene(refs: SceneRefs) {
   return (
     <>
       <color attach="background" args={[PALETTE.sky]} />
-      <fog attach="fog" args={[PALETTE.sky, 34, 78]} />
+      <fogExp2 attach="fog" args={[PALETTE.sky, 0.011]} />
 
-      {/* Cool ambient + hemisphere fill keeps shadows from going black. */}
-      <ambientLight intensity={0.28} color={PALETTE.ice} />
-      <hemisphereLight
-        intensity={0.5}
-        color={PALETTE.ice}
-        groundColor={PALETTE.mountainShadow}
-      />
+      {/* Brighter cool ambient + hemisphere so the midnight scene still reads. */}
+      <ambientLight intensity={0.55} color={PALETTE.ice} />
+      <hemisphereLight intensity={0.85} color={"#cfe0ff"} groundColor={"#223047"} />
 
-      {/* Moonlight key light from above / behind, casting the only real shadows. */}
+      {/* Moonlight key light (the only shadow caster). */}
       <directionalLight
-        position={[18, 30, -14]}
-        intensity={1.25}
-        color={"#cfe0ff"}
+        position={[18, 32, -14]}
+        intensity={1.9}
+        color={"#dbe7ff"}
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-camera-near={1}
-        shadow-camera-far={80}
+        shadow-camera-far={90}
         shadow-camera-left={-16}
         shadow-camera-right={16}
-        shadow-camera-top={26}
-        shadow-camera-bottom={-6}
+        shadow-camera-top={28}
+        shadow-camera-bottom={-8}
         shadow-bias={-0.0005}
       />
+      {/* Cool fill from the front to lift the shadow side. */}
+      <directionalLight position={[-14, 10, 18]} intensity={0.55} color={"#9fc0e8"} />
 
-      {/* A couple of warm practical fills so station windows read warm. */}
+      {/* Decorative moon. */}
+      <mesh position={[26, 30, -20]}>
+        <sphereGeometry args={[2.4, 24, 24]} />
+        <meshBasicMaterial color={"#eef4ff"} />
+      </mesh>
+
       {warmLights.slice(0, 4).map((pos, i) => (
         <pointLight
           key={i}
           position={pos}
-          intensity={3.2}
+          intensity={3.6}
           distance={6}
           decay={2}
           color={PALETTE.amber}
@@ -123,59 +137,46 @@ export default function MountainScene(refs: SceneRefs) {
       ))}
 
       <Stars
-        radius={90}
-        depth={40}
-        count={1400}
-        factor={3.2}
+        radius={110}
+        depth={48}
+        count={1800}
+        factor={3.6}
         saturation={0}
         fade
-        speed={refs.reducedMotion ? 0 : 0.4}
+        speed={refs.reducedMotion ? 0 : 0.45}
       />
 
-      {/* The whole world lives in one group; presentation rotation (if any) is
-          applied by CameraRig to the camera, never to this group, so the train,
-          track, and stations can never desync. */}
-      <group>
+      <group ref={worldRef}>
         {/* Mountain */}
         <mesh geometry={mountainGeo} castShadow receiveShadow>
-          <meshStandardMaterial vertexColors roughness={0.95} metalness={0.02} />
+          <meshStandardMaterial vertexColors roughness={0.92} metalness={0.02} />
         </mesh>
 
         {/* Tabletop plinth */}
         <mesh position={[0, -0.8 - plinthHeight / 2, 0]} receiveShadow>
-          <cylinderGeometry
-            args={[plinthRadius, plinthRadius + 0.3, plinthHeight, 64]}
-          />
-          <meshStandardMaterial color={"#20160f"} roughness={0.7} metalness={0.1} />
+          <cylinderGeometry args={[plinthRadius, plinthRadius + 0.3, plinthHeight, 64]} />
+          <meshStandardMaterial color={"#241a12"} roughness={0.7} metalness={0.1} />
         </mesh>
-        {/* Plinth top rim */}
         <mesh position={[0, -0.8 + 0.02, 0]} receiveShadow>
           <cylinderGeometry args={[plinthRadius, plinthRadius, 0.08, 64]} />
-          <meshStandardMaterial color={"#2b1f16"} roughness={0.6} />
+          <meshStandardMaterial color={"#302218"} roughness={0.6} />
         </mesh>
-        {/* Brass title plate on the front rim */}
+        {/* Brass title plate */}
         <mesh position={[0, -0.8 - plinthHeight / 2, plinthRadius + 0.18]} castShadow>
           <boxGeometry args={[4.2, 0.5, 0.08]} />
-          <meshStandardMaterial
-            color={PALETTE.brass}
-            roughness={0.35}
-            metalness={0.85}
-          />
+          <meshStandardMaterial color={PALETTE.brass} roughness={0.35} metalness={0.85} />
         </mesh>
 
         <Railway />
-        <Train
-          progressRef={refs.progressRef}
-          reducedMotion={refs.reducedMotion}
-        />
+        <Train progressRef={refs.progressRef} reducedMotion={refs.reducedMotion} />
         <Stations activeIndexRef={refs.activeIndexRef} />
         <Environment />
+        <Details />
       </group>
 
       <CameraRig
         progressRef={refs.progressRef}
         userInteractingRef={refs.userInteractingRef}
-        reducedMotion={refs.reducedMotion}
       />
     </>
   );
