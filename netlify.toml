@@ -1,0 +1,34 @@
+# Netlify build + routing configuration for marcelobayon.com
+# The site is a Vite single-page app. Netlify builds with `npm run build`
+# and serves the static output from `dist/`.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA fallback: every client-side route (including /resume and deep links)
+# must resolve to index.html so React Router can handle it. This does NOT
+# rewrite real asset requests, which are served directly from /assets/*.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Long-cache the fingerprinted build assets; they are content-hashed by Vite.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Baseline security headers. Conservative; no CSP yet to avoid breaking the
+# inline 3D canvas bootstrapping. Revisit with a hashed CSP in a later pass.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"

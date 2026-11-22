@@ -1,0 +1,66 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.backdrop__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.backdrop__stars circle {
+  animation-name: bd-twinkle;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.backdrop__light {
+  animation: bd-flicker 3.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.8));
+}
+
+.backdrop__fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 15, 29, 0) 40%,
+    rgba(8, 15, 29, 0.55) 78%,
+    var(--bg) 100%
+  );
+}
+
+@keyframes bd-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes bd-flicker {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  45% {
+    opacity: 0.5;
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop__stars circle,
+  .backdrop__light {
+    animation: none;
+  }
+}
