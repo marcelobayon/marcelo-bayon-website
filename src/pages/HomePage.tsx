@@ -53,15 +53,15 @@ export default function HomePage() {
             <p className="hero__tagline">{PROFILE.tagline}</p>
             <div className="hero__actions">
               <Link to="/resume" className="btn btn-primary">
-                Enter the Midnight Mountain Railway →
+                View my interactive résumé →
               </Link>
               <Link to="/resume#resume-text" className="btn btn-ghost">
-                Read the text résumé
+                Read the plain résumé
               </Link>
             </div>
             <p className="hero__hint">
-              An interactive resume — ride a model railway up through the work, or
-              read it straight.
+              Explore my career as a 3D mountain railway you can scroll through —
+              or read it as a plain page.
             </p>
           </div>
         </section>

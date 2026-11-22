@@ -196,13 +196,13 @@ export const EXPERIENCE: ResumeItem[] = [
   },
   {
     id: "amazon",
-    title: "Software Development Engineer I",
+    title: "Fleet Asset Specialist (L4)",
     organization: "Amazon",
     period: "May 2021 – Feb 2023",
     location: "Salt Lake City, UT",
-    lens: "software",
+    lens: "both",
     summary:
-      "Built internal tooling for the Transportation Operations team — turning manual yard and reporting workflows into dashboards and automation.",
+      "An operations role where I built the team's software — turning manual yard and reporting workflows into dashboards and automation for Transportation Operations.",
     highlights: [
       "Built and maintained 11 internal tools for Transportation Operations — a smart yard map, end-of-day yard reporting, and process automation.",
       "Used AWS Redshift, QuickSight, and RDS to turn operational data into dashboards, cutting manual report-creation time by roughly half.",
@@ -268,7 +268,7 @@ export const EXPERIENCE: ResumeItem[] = [
     location: "Murray, UT",
     lens: "operations",
     summary:
-      "Ran the full borrower lifecycle for government-backed loans — the domain that still anchors my fintech and real-estate work.",
+      "Managed the full client lifecycle for government-backed loans — document review, underwriting coordination, and closing logistics across multiple teams.",
     highlights: [
       "Managed borrowers from inquiry through closing; reviewed appraisals and title, validated financial documents, and tracked underwriting conditions to resolution.",
       "Coordinated title, appraisal, underwriting, and closing teams to hit deadlines.",
@@ -431,14 +431,6 @@ export const PUBLICATIONS: ResumeItem[] = [
 
 export const CERTIFICATIONS: ResumeItem[] = [
   {
-    id: "mlo",
-    title: "Licensed Mortgage Loan Originator — Utah",
-    organization: "NMLS",
-    summary:
-      "Active Utah mortgage loan originator license. (NMLS number available on request.)",
-    verification: "confirmed",
-  },
-  {
     id: "nlp",
     title: "NLP Practitioner",
     summary:
@@ -455,22 +447,19 @@ export const SUMMIT = {
 };
 
 /**
- * CONTENT_NOTES — open items for Marcelo to confirm. Not rendered publicly.
- * These are the only places this resume leans on judgment calls:
+ * CONTENT_NOTES — open items for Marcelo. Not rendered publicly.
  *
- * 1. Amazon title — resumes say "SDE I"; the job-history dump lists the same
- *    dates/tools under "Fleet Asset Specialist (L4)." Confirm the official
- *    title (Amazon verifies on background checks). EXPERIENCE.amazon flagged.
- * 2. UDAF end date — set to Jul 2025 per project docs (the 2025 PDF said
- *    "Present" but predates the departure). Confirm the exact end date.
- * 3. Colorado College "BCS 2017" — intentionally omitted (only on the 2023
- *    resume, inconsistent, and absent from your own project docs). Add only if
- *    it's a real, completed degree.
- * 4. Alorica + mortgage + Taco Fest dates — approximate ranges from the job
- *    history; confirm exact dates.
- * 5. Contact — using Gmail + GitHub. Add LinkedIn URL; consider a
- *    marcelo@marcelobayon.com address. Phone intentionally omitted (privacy).
- * 6. NMLS number — omitted per README; say the word to include it.
- * 7. Book titles / links — needed to make PUBLICATIONS clickable.
- * 8. Venture statuses — confirm concept vs in-development per project.
+ * Resolved (Nov 2026): Amazon title set to "Fleet Asset Specialist (L4)";
+ * Colorado College degree left off; mortgage *licensure* removed. The mortgage
+ * loan-officer role is kept as operational experience — say the word to cut it.
+ *
+ * Still to confirm / fill in:
+ * - UDAF end date set to Jul 2025 (the 2025 PDF said "Present" but predates the
+ *   departure). Confirm the exact end date.
+ * - Alorica (2012–2016), mortgage (2019–2021), and Taco Fest dates are
+ *   approximate — confirm.
+ * - Contact: using Gmail + GitHub. Add a LinkedIn URL and/or a
+ *   marcelo@marcelobayon.com address if you want. Phone omitted (privacy).
+ * - Book titles / purchase links — needed to make PUBLICATIONS clickable.
+ * - Venture statuses — confirm concept vs in-development per project.
  */
