@@ -18,7 +18,7 @@ export default function ResumePage() {
     title: "Résumé — Marcelo Bayon | The Midnight Mountain Railway",
     description:
       "The interactive resume of Marcelo Bayon — ride a model mountain railway through his software and operations career, or read the full text résumé.",
-    canonical: "https://marcelobayon.com/resume",
+    canonical: "https://resume.marcelobayon.com/resume",
   });
 
   const reducedMotion = useReducedMotion();

@@ -28,7 +28,7 @@ export default function HomePage() {
     title: "Marcelo Bayon — Software Developer & Operational Leader",
     description:
       "Marcelo Bayon — software developer and operational leader in Salt Lake City. Salesforce/Omnistudio, internal tooling, automation, and the teams behind the work.",
-    canonical: "https://marcelobayon.com/",
+    canonical: "https://resume.marcelobayon.com/",
   });
 
   const featured = FEATURED_IDS.map(
