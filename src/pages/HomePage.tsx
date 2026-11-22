@@ -150,6 +150,47 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Open source */}
+        <section className="section container" id="open-source">
+          <header className="section__head">
+            <p className="eyebrow">Open source</p>
+            <h2>The Personal Engineering Kit</h2>
+            <p className="section__note">
+              The reusable, tested building blocks behind my products — free and
+              open source.
+            </p>
+          </header>
+          <div className="focus">
+            <article className="focus__card">
+              <h3>See how it works</h3>
+              <p>
+                A plain-English tour of the toolkit as an interactive 3D model —
+                watch the same parts snap together to solve different problems. No
+                code required.
+              </p>
+              <Link to="/engineering" className="section__more">
+                Explore the kit →
+              </Link>
+            </article>
+            <article className="focus__card">
+              <h3>For developers</h3>
+              <p>
+                Standard-library Python — logging, configuration, resilience, and
+                more — pip-installable and reused across every project. Typed,
+                tested, MIT-licensed.
+              </p>
+              <a
+                href="https://github.com/marcelobayon/personal_engineering_kit"
+                className="section__more"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on GitHub →
+              </a>
+            </article>
+          </div>
+        </section>
+
         {/* Writing */}
         <section className="section container">
           <header className="section__head">

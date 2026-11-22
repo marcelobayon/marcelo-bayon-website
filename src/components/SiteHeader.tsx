@@ -20,6 +20,7 @@ export default function SiteHeader() {
         <nav className="site-header__nav" aria-label="Primary">
           <a href="/#work">Work</a>
           <a href="/#ventures">Ventures</a>
+          <Link to="/engineering">Engineering</Link>
           <a href="/#contact">Contact</a>
           <a
             href={PROFILE.links.github}
