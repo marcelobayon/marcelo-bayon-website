@@ -58,6 +58,9 @@ export default function HomePage() {
               <Link to="/resume#resume-text" className="btn btn-ghost">
                 Read the plain résumé
               </Link>
+              <a href="/engineering/interactive" className="btn btn-ghost">
+                Interactive engineering toolkit →
+              </a>
             </div>
             <p className="hero__hint">
               Explore my career as a 3D mountain railway you can scroll through —

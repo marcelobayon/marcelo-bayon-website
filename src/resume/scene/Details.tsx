@@ -10,7 +10,15 @@ import {
 import { PALETTE } from "../../lib/theme";
 
 /** Orient children to the track's local frame at a given progress. */
-function OnTrack({ progress, children }: { progress: number; children: ReactNode }) {
+function OnTrack({
+  progress,
+  lift = 0,
+  children,
+}: {
+  progress: number;
+  lift?: number;
+  children: ReactNode;
+}) {
   const { position, quaternion } = useMemo(() => {
     const f = sampleFrame(progress);
     const basis = new THREE.Matrix4().makeBasis(f.binormal, f.normal, f.tangent);
@@ -22,7 +30,8 @@ function OnTrack({ progress, children }: { progress: number; children: ReactNode
   }, [progress]);
   return (
     <group position={position} quaternion={quaternion}>
-      {children}
+      {/* lift is along the local normal so details drop with the lowered track */}
+      <group position={[0, lift, 0]}>{children}</group>
     </group>
   );
 }
@@ -76,7 +85,7 @@ function PortalFrame({ z, mats }: { z: number; mats: Mats }) {
  */
 function Tunnel({ progress, mats }: { progress: number; mats: Mats }) {
   return (
-    <OnTrack progress={progress}>
+    <OnTrack progress={progress} lift={-0.1}>
       {/* Rock mound the bore passes through */}
       <mesh position={[0, 0.34, 0]} scale={[1.05, 0.82, 1.2]} material={mats.rock} castShadow receiveShadow>
         <icosahedronGeometry args={[0.72, 1]} />
@@ -126,7 +135,7 @@ function Bridge({
   const braceAng = Math.atan2(0.66, legLen);
 
   return (
-    <OnTrack progress={progress}>
+    <OnTrack progress={progress} lift={-0.1}>
       {/* Stringers (main beams under the deck) */}
       {[-0.3, 0.3].map((x) => (
         <mesh key={x} position={[x, 0.03, 0]} material={mats.timber} castShadow>

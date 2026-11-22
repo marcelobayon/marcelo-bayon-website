@@ -9,6 +9,24 @@ import { clampProgress } from "../scene/scene-config";
  */
 export type NavigationMode = "guided" | "direct" | "free";
 
+/**
+ * The journey never starts at raw progress 0: the train has length, so at 0 the
+ * cars would clamp and pile up at the base ("appear from nowhere"). We start at
+ * the valley station, with the whole train already on the track, and run just
+ * past the summit.
+ */
+export const JOURNEY_MIN = STATIONS[0].progress; // valley station
+export const JOURNEY_MAX = 0.99;
+
+function remapToJourney(frac: number): number {
+  return JOURNEY_MIN + clampProgress(frac) * (JOURNEY_MAX - JOURNEY_MIN);
+}
+function journeyToFrac(progress: number): number {
+  return (
+    (clampProgress(progress) - JOURNEY_MIN) / (JOURNEY_MAX - JOURNEY_MIN)
+  );
+}
+
 /** The station nearest to a normalized journey progress (0–1). */
 export function nearestStationIndex(progress: number): number {
   const p = clampProgress(progress);
@@ -32,13 +50,13 @@ export function stationById(id: string) {
 export function progressToScrollTop(progress: number): number {
   const doc = document.documentElement;
   const scrollable = doc.scrollHeight - window.innerHeight;
-  return clampProgress(progress) * Math.max(scrollable, 1);
+  return Math.max(0, Math.min(1, journeyToFrac(progress))) * Math.max(scrollable, 1);
 }
 
-/** Current normalized progress from the page scroll position. */
+/** Current journey progress (JOURNEY_MIN…JOURNEY_MAX) from the scroll position. */
 export function scrollTopToProgress(): number {
   const doc = document.documentElement;
   const scrollable = doc.scrollHeight - window.innerHeight;
-  if (scrollable <= 0) return 0;
-  return clampProgress(window.scrollY / scrollable);
+  if (scrollable <= 0) return JOURNEY_MIN;
+  return remapToJourney(window.scrollY / scrollable);
 }

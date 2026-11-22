@@ -36,7 +36,7 @@ function Curtain({
       const vy = pos.getY(i);
       const up = (vy + height / 2) / height; // 0 bottom → 1 top
       const band = 0.6 + 0.4 * Math.sin(pos.getX(i) * 0.5); // vertical streaks
-      const a = Math.pow(1 - up, 1.7) * 0.5 * band;
+      const a = Math.pow(1 - up, 1.6) * 0.62 * band;
       colors[i * 4] = col.r;
       colors[i * 4 + 1] = col.g;
       colors[i * 4 + 2] = col.b;
@@ -82,9 +82,9 @@ function Curtain({
 export default function Aurora({ reducedMotion }: { reducedMotion: boolean }) {
   return (
     <group>
-      <Curtain cy={23} cx={-4} yaw={0.15} color="#3df5a0" phase={0} width={50} height={15} reducedMotion={reducedMotion} />
-      <Curtain cy={25.5} cx={2} yaw={-0.2} color="#39c6e8" phase={2.1} width={44} height={12} reducedMotion={reducedMotion} />
-      <Curtain cy={21} cx={6} yaw={0.4} color="#9a7cf0" phase={4.2} width={38} height={10} reducedMotion={reducedMotion} />
+      <Curtain cy={19} cx={-4} yaw={0.15} color="#3df5a0" phase={0} width={52} height={16} reducedMotion={reducedMotion} />
+      <Curtain cy={21.5} cx={3} yaw={-0.22} color="#39c6e8" phase={2.1} width={46} height={13} reducedMotion={reducedMotion} />
+      <Curtain cy={17} cx={7} yaw={0.42} color="#9a7cf0" phase={4.2} width={40} height={11} reducedMotion={reducedMotion} />
     </group>
   );
 }

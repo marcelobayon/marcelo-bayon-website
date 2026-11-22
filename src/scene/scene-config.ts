@@ -28,7 +28,7 @@ export const MOUNTAIN_CONFIG = {
   splineResolution: 240,
   plinthRadius: 11.5,
   plinthHeight: 1.0,
-  trackSurfaceOffset: 0.22,
+  trackSurfaceOffset: 0.07,
 } as const;
 
 export const TRAIN_CONFIG = {
@@ -37,6 +37,9 @@ export const TRAIN_CONFIG = {
   wheelRailOffset: 0.16,
   speedUnitsPerSecond: 1.7,
 } as const;
+
+/** Scroll-driven presentation spin of the whole world, radians per unit progress. */
+export const PRESENTATION_SPIN = 0.7;
 
 export const CAMERA_CONFIG = {
   initialPosition: [19, 15, 22] as Vec3Tuple,
@@ -47,11 +50,13 @@ export const CAMERA_CONFIG = {
 } as const;
 
 export const STATION_PLACEMENTS: readonly StationPlacement[] = [
-  { id: "valley-station", progress: 0.06, radialOffset: 1.55, verticalOffset: 0.0 },
-  { id: "academy-ridge", progress: 0.23, radialOffset: 1.7, verticalOffset: 0.0 },
-  { id: "foundry-crossing", progress: 0.43, radialOffset: -1.65, verticalOffset: 0.0 },
-  { id: "developers-pass", progress: 0.62, radialOffset: 1.65, verticalOffset: 0.0 },
-  { id: "innovation-village", progress: 0.81, radialOffset: -1.7, verticalOffset: 0.0 },
+  // Stations sit just beside the track on the slope (small radial offset), on a
+  // retaining-wall terrace built into the mountainside — not floating pads.
+  { id: "valley-station", progress: 0.06, radialOffset: 0.95, verticalOffset: -0.05 },
+  { id: "academy-ridge", progress: 0.23, radialOffset: 0.95, verticalOffset: -0.05 },
+  { id: "foundry-crossing", progress: 0.43, radialOffset: -0.95, verticalOffset: -0.05 },
+  { id: "developers-pass", progress: 0.62, radialOffset: 0.9, verticalOffset: -0.05 },
+  { id: "innovation-village", progress: 0.81, radialOffset: -0.95, verticalOffset: -0.05 },
   { id: "summit-observatory", progress: 0.97, radialOffset: 0.0, verticalOffset: 0.0 },
 ];
 
@@ -281,6 +286,24 @@ export function canyonDip(worldAngle: number, yNorm: number): number {
       Math.exp(-((dA / c.angularHalfWidth) ** 2) - (dY / c.heightHalfWidth) ** 2);
   }
   return dip;
+}
+
+/**
+ * The railway runs in a cutting carved into the slope. At each height the track
+ * is at one angle; this carves the rock back on the UPHILL side of that angle,
+ * leaving a shelf the track sits on with a cut bank above it. Positive = inward.
+ */
+export function trackCut(worldAngle: number, yNorm: number): number {
+  const thetaT =
+    (yNorm * 2 * Math.PI * MOUNTAIN_CONFIG.spiralTurns) % (2 * Math.PI);
+  let d = worldAngle - thetaT;
+  d = Math.atan2(Math.sin(d), Math.cos(d)); // −π..π
+  const width = 0.13; // angular width of the cut bank (uphill side)
+  const lip = 0.05; // tiny shelf lip on the downhill side
+  if (d > lip) return 0;
+  if (d >= 0) return 0; // track rim: uncut
+  const x = Math.min(-d / width, 1);
+  return 0.6 * (x * x * (3 - 2 * x)); // smoothstep bank, up to 0.6 inward
 }
 
 /**

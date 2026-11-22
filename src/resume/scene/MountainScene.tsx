@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import {
   MOUNTAIN_CONFIG,
+  PRESENTATION_SPIN,
   STATION_PLACEMENTS,
   getStationPosition,
 } from "../../scene/scene-config";
@@ -17,6 +18,7 @@ import Details from "./Details";
 import FrozenLake from "./FrozenLake";
 import SkyDome from "./SkyDome";
 import Aurora from "./Aurora";
+import Snow from "./Snow";
 import CameraRig from "./CameraRig";
 
 export type SceneRefs = {
@@ -24,6 +26,7 @@ export type SceneRefs = {
   activeIndexRef: MutableRefObject<number>;
   userInteractingRef: MutableRefObject<boolean>;
   reducedMotion: boolean;
+  isMobile: boolean;
 };
 
 const { plinthRadius, plinthHeight } = MOUNTAIN_CONFIG;
@@ -36,7 +39,7 @@ export default function MountainScene(refs: SceneRefs) {
   useFrame(() => {
     const g = worldRef.current;
     if (!g) return;
-    const target = -refs.progressRef.current * Math.PI * 1.15;
+    const target = -refs.progressRef.current * PRESENTATION_SPIN;
     g.rotation.y += (target - g.rotation.y) * 0.08;
   });
 
@@ -56,6 +59,7 @@ export default function MountainScene(refs: SceneRefs) {
 
       <SkyDome />
       <Aurora reducedMotion={refs.reducedMotion} />
+      <Snow count={refs.isMobile ? 300 : 700} reducedMotion={refs.reducedMotion} />
 
       {/* Brighter cool ambient + hemisphere so the midnight scene still reads. */}
       <ambientLight intensity={0.55} color={PALETTE.ice} />

@@ -4,6 +4,7 @@ import {
   MOUNTAIN_CONFIG,
   mountainRadiusAt,
   canyonDip,
+  trackCut,
 } from "../../scene/scene-config";
 import { PALETTE } from "../../lib/theme";
 
@@ -15,8 +16,8 @@ const { height, trackSurfaceOffset } = MOUNTAIN_CONFIG;
  * Height-based vertex colors (rock → snow), darkened inside the canyons.
  */
 function buildMountainGeometry() {
-  const rings = 76; // vertical resolution
-  const cols = 168; // angular resolution (wraps)
+  const rings = 132; // vertical resolution (high enough for the cutting to read as a band)
+  const cols = 196; // angular resolution (wraps)
   const yBottom = -0.8;
 
   const positions: number[] = [];
@@ -37,7 +38,7 @@ function buildMountainGeometry() {
 
     for (let j = 0; j < cols; j += 1) {
       const ang = (j / cols) * Math.PI * 2;
-      const dip = y >= 0 ? canyonDip(ang, tHeight) : 0;
+      const dip = y >= 0 ? canyonDip(ang, tHeight) + trackCut(ang, tHeight) : 0;
       const r = Math.max(baseR - dip, 0.05);
       const x = Math.cos(ang) * r;
       const z = Math.sin(ang) * r;

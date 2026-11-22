@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import MountainScene from "./scene/MountainScene";
@@ -16,6 +16,15 @@ type Props = { onExitToText: () => void };
 
 export default function RailwayExperience({ onExitToText }: Props) {
   const reducedMotion = useReducedMotion();
+
+  // Lower the quality bar on phones: no real-time shadows, lower pixel ratio,
+  // fewer snow particles.
+  const isMobile = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      (window.matchMedia("(max-width: 820px)").matches || "ontouchstart" in window),
+    [],
+  );
 
   // Frame-loop state lives in refs so scrolling never re-renders the 3D tree.
   const progressRef = useRef(0);
@@ -72,13 +81,13 @@ export default function RailwayExperience({ onExitToText }: Props) {
       <div className="railway__stage">
         <Canvas
           className="railway__canvas"
-          shadows
-          dpr={[1, 2]}
+          shadows={!isMobile}
+          dpr={[1, isMobile ? 1.5 : 2]}
           gl={{
             antialias: true,
             powerPreference: "high-performance",
             toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.3,
+            toneMappingExposure: 1.25,
           }}
           camera={{
             position: [...CAMERA_CONFIG.initialPosition],
@@ -92,6 +101,7 @@ export default function RailwayExperience({ onExitToText }: Props) {
             activeIndexRef={activeIndexRef}
             userInteractingRef={userInteractingRef}
             reducedMotion={reducedMotion}
+            isMobile={isMobile}
           />
         </Canvas>
 

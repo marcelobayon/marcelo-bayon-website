@@ -96,6 +96,19 @@ function Locomotive({
       <mesh position={[0, 0.28, 0.55]} material={mats.window}>
         <boxGeometry args={[0.1, 0.1, 0.05]} />
       </mesh>
+      {/* Headlight beam (visible additive cone pointing down the track) */}
+      <mesh position={[0, 0.26, 1.2]} rotation={[-Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.32, 1.35, 18, 1, true]} />
+        <meshBasicMaterial
+          color={"#fff1cf"}
+          transparent
+          opacity={0.1}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+          fog={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
       {/* Cowcatcher */}
       <mesh position={[0, 0.03, 0.56]} rotation={[0.5, 0, 0]} material={mats.iron}>
         <boxGeometry args={[0.34, 0.16, 0.04]} />

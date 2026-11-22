@@ -76,27 +76,103 @@ function Lamp({ x = 0, z = 0.9 }: { x?: number; z?: number }) {
   );
 }
 
+/** A terrace cut/built into the slope: retaining wall + side walls + deck. */
+function StationTerrace({ m }: { m: M }) {
+  return (
+    <group>
+      {/* Retaining wall holding the terrace out over the downhill drop */}
+      <mesh position={[0, -0.78, 0.6]} material={m.stone} castShadow receiveShadow>
+        <boxGeometry args={[2.05, 1.7, 0.5]} />
+      </mesh>
+      {/* Side walls tucked into the slope */}
+      {[-0.98, 0.98].map((x) => (
+        <mesh key={x} position={[x, -0.55, 0.2]} material={m.stone} castShadow>
+          <boxGeometry args={[0.2, 1.25, 1.2]} />
+        </mesh>
+      ))}
+      {/* Snow-dusted stone deck */}
+      <mesh position={[0, 0.02, 0.15]} receiveShadow>
+        <boxGeometry args={[2.0, 0.16, 1.4]} />
+        <meshStandardMaterial color={"#dfe7f0"} roughness={0.85} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Valley Station — the fleshed-out terminus where the train rests at the start. */
 function ValleyDepot({ m }: { m: M }) {
   return (
     <group>
-      <mesh position={[0, 0.3, 0]} material={m.timber} castShadow receiveShadow>
-        <boxGeometry args={[1.5, 0.6, 0.8]} />
+      {/* Main hall */}
+      <mesh position={[-0.25, 0.34, 0]} material={m.timber} castShadow receiveShadow>
+        <boxGeometry args={[1.5, 0.68, 0.82]} />
       </mesh>
-      <mesh position={[0, 0.68, 0]} material={m.roof} castShadow>
-        <boxGeometry args={[1.7, 0.12, 1.0]} />
-      </mesh>
-      <mesh position={[0, 0.76, 0]} material={m.snow}>
-        <boxGeometry args={[1.66, 0.06, 0.96]} />
-      </mesh>
-      <mesh position={[0, 0.5, 0.6]} material={m.roof} castShadow>
-        <boxGeometry args={[1.6, 0.06, 0.5]} />
-      </mesh>
-      {[-0.5, 0, 0.5].map((x) => (
-        <mesh key={x} position={[x, 0.3, 0.41]} material={m.warm}>
-          <boxGeometry args={[0.22, 0.26, 0.02]} />
+      {/* Gable roof + snow */}
+      {[-1, 1].map((s) => (
+        <mesh
+          key={s}
+          position={[-0.25, 0.8, s * 0.22]}
+          rotation={[s * 0.62, 0, 0]}
+          material={m.roof}
+          castShadow
+        >
+          <boxGeometry args={[1.62, 0.06, 0.54]} />
         </mesh>
       ))}
-      <Lamp x={0.95} z={0.5} />
+      {[-1, 1].map((s) => (
+        <mesh key={`sn${s}`} position={[-0.25, 0.83, s * 0.2]} rotation={[s * 0.62, 0, 0]} material={m.snow}>
+          <boxGeometry args={[1.5, 0.04, 0.46]} />
+        </mesh>
+      ))}
+      {/* Chimney + smoke */}
+      <mesh position={[-0.7, 0.98, -0.22]} material={m.stone} castShadow>
+        <boxGeometry args={[0.14, 0.4, 0.14]} />
+      </mesh>
+      <mesh position={[-0.7, 1.25, -0.22]} material={m.smoke}>
+        <sphereGeometry args={[0.1, 8, 8]} />
+      </mesh>
+      {/* Platform canopy on posts (toward the track, +Z) */}
+      <mesh position={[-0.1, 0.62, 0.64]} material={m.roof} castShadow>
+        <boxGeometry args={[1.8, 0.05, 0.5]} />
+      </mesh>
+      {[-0.85, 0.6].map((x) => (
+        <mesh key={x} position={[x, 0.38, 0.82]} material={m.timber}>
+          <boxGeometry args={[0.06, 0.5, 0.06]} />
+        </mesh>
+      ))}
+      {/* Door + warm windows */}
+      <mesh position={[-0.25, 0.26, 0.42]} material={m.warm}>
+        <boxGeometry args={[0.24, 0.42, 0.02]} />
+      </mesh>
+      {[-0.65, 0.15].map((x) => (
+        <mesh key={x} position={[x, 0.44, 0.42]} material={m.warm}>
+          <boxGeometry args={[0.22, 0.24, 0.02]} />
+        </mesh>
+      ))}
+      {/* Station clock */}
+      <mesh position={[-0.25, 0.66, 0.43]} material={m.warm}>
+        <cylinderGeometry args={[0.1, 0.1, 0.02, 16]} />
+      </mesh>
+      {/* Water tower beside the depot */}
+      <group position={[0.78, 0, -0.1]}>
+        <mesh position={[0, 0.74, 0]} material={m.timber} castShadow>
+          <cylinderGeometry args={[0.26, 0.26, 0.4, 14]} />
+        </mesh>
+        <mesh position={[0, 0.96, 0]} material={m.roof} castShadow>
+          <coneGeometry args={[0.3, 0.18, 14]} />
+        </mesh>
+        {[
+          [-0.16, -0.16],
+          [0.16, -0.16],
+          [-0.16, 0.16],
+          [0.16, 0.16],
+        ].map(([x, z], i) => (
+          <mesh key={i} position={[x, 0.32, z]} material={m.timber}>
+            <boxGeometry args={[0.05, 0.64, 0.05]} />
+          </mesh>
+        ))}
+      </group>
+      <Lamp x={-1.05} z={0.6} />
     </group>
   );
 }
@@ -336,11 +412,23 @@ export default function Stations({
             rotation={[0, yaw, 0]}
             scale={isSummit ? 1.3 : 1}
           >
-            <mesh position={[0, 0, 0]} receiveShadow>
-              <cylinderGeometry args={[1.0, 1.1, 0.12, 20]} />
-              <meshStandardMaterial color={"#e9eff6"} roughness={0.9} />
-            </mesh>
-            <Building m={m} />
+            {isSummit ? (
+              <>
+                <mesh position={[0, 0, 0]} receiveShadow>
+                  <cylinderGeometry args={[1.0, 1.1, 0.12, 20]} />
+                  <meshStandardMaterial color={"#e9eff6"} roughness={0.9} />
+                </mesh>
+                <Building m={m} />
+              </>
+            ) : (
+              <>
+                <StationTerrace m={m} />
+                {/* Building sits on the terrace, tucked back toward the slope */}
+                <group position={[0, 0.1, -0.1]}>
+                  <Building m={m} />
+                </group>
+              </>
+            )}
           </group>
         );
       })}
